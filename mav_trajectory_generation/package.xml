@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>mav_trajectory_generation</name>
   <version>0.0.0</version>
   <description>Polynomial trajectory generation for MAVs.</description>
@@ -14,15 +15,20 @@
 
   <license>ASL 2.0</license>
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <buildtool_depend>catkin_simple</buildtool_depend>
-
-  <depend>cmake_modules</depend>
-  <depend>eigen_catkin</depend>
-  <depend>eigen_checks</depend>
-  <depend>glog_catkin</depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>mav_msgs</depend>
   <depend>nlopt</depend>
+  <depend>yaml-cpp</depend>
 
-  <exec_depend>yaml_cpp_catkin</exec_depend>
+  <buildtool_depend>eigen3_cmake_module</buildtool_depend>
+  <build_depend>eigen</build_depend>
+  <buildtool_export_depend>eigen3_cmake_module</buildtool_export_depend>
+  <build_export_depend>eigen</build_export_depend>
+
+  <test_depend>ament_lint_common</test_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>
