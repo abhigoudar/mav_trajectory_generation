@@ -18,38 +18,29 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(geometry_msgs REQUIRED)
-find_package(mav_msgs REQUIRED)
 find_package(tf2_eigen REQUIRED)
 find_package(mav_planning_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-find_package(visualization_msgs REQUIRED)
-find_package(yaml-cpp REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(mav_trajectory_generation REQUIRED)
 find_package(mav_visualization REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(glog REQUIRED libglog)
 
-find_package(eigen3_cmake_module REQUIRED)
-find_package(Eigen3)
-
 set(DEPENDENCIES
   rclcpp
-  geometry_msgs
-  mav_msgs
   mav_planning_msgs
   sensor_msgs
   nav_msgs
   tf2_eigen
   std_srvs
-  visualization_msgs
-  mav_trajectory_generation
-  mav_visualization
   trajectory_msgs
+  mav_visualization
+  mav_trajectory_generation
 )
 
 include_directories(
@@ -66,7 +57,7 @@ add_library(${PROJECT_NAME}
   src/ros_conversions.cpp
   src/ros_visualization.cpp
 )
-ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
+ament_target_dependencies(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
 
 add_executable(trajectory_sampler_node 
                src/trajectory_sampler_node.cpp)
@@ -104,9 +95,8 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_export_dependencies(eigen3_cmake_module)
+ament_export_dependencies(eigen3_cmake_module ${DEPENDENCIES})
 ament_export_libraries(${PROJECT_NAME})
-ament_export_dependencies(${DEPENDENCIES})
 ament_export_include_directories(include)
 ament_package()
 

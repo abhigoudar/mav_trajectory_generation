@@ -18,7 +18,6 @@ find_package(Eigen3)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(glog REQUIRED libglog)
-# pkg_check_modules(NLopt REQUIRED)
 
 set(DEPENDENCIES
   mav_msgs
@@ -27,8 +26,8 @@ set(DEPENDENCIES
 include_directories(
   include
   ${EIGEN3_INCLUDE_DIRS}
-  # ${NLOPT_INCLUDE_DIR}
 )
+
 #############
 # LIBRARIES #
 #############
@@ -43,11 +42,9 @@ add_library(${PROJECT_NAME}
   src/io.cpp
   src/rpoly/rpoly_ak1.cpp
 )
-# Link against yaml-cpp.
-ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
-target_link_libraries(${PROJECT_NAME} 
+ament_target_dependencies(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC
   yaml-cpp
-  # ${NLOPT_LIBRARIES}
   glog)
 
 install(TARGETS ${PROJECT_NAME}
@@ -99,8 +96,8 @@ endif()
 ##########
 # EXPORT #
 ##########
-ament_export_dependencies(eigen3_cmake_module)
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(eigen3_cmake_module ${DEPENDENCIES})
 
 ament_package()

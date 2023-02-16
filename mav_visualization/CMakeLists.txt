@@ -29,7 +29,7 @@ add_library(${PROJECT_NAME}
   src/leica_marker.cpp
   src/hexacopter_marker.cpp
 )
-ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
+ament_target_dependencies(${PROJECT_NAME} PUBLIC ${DEPENDENCIES})
 
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
