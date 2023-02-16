@@ -3,6 +3,10 @@
 cmake_minimum_required(VERSION 3.5)
 project(mav_trajectory_generation_ros)
 
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
@@ -13,7 +17,6 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(mav_msgs REQUIRED)
@@ -27,9 +30,6 @@ find_package(yaml-cpp REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 find_package(mav_trajectory_generation REQUIRED)
 find_package(mav_visualization REQUIRED)
-
-find_package(eigen3_cmake_module REQUIRED)
-find_package(Eigen3)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(glog REQUIRED libglog)
@@ -68,7 +68,7 @@ ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
 add_executable(trajectory_sampler_node 
                src/trajectory_sampler_node.cpp)
 ament_target_dependencies(trajectory_sampler_node ${DEPENDENCIES})
-target_link_libraries(trajectory_sampler_node ${PROJECT_NAME})
+target_link_libraries(trajectory_sampler_node ${PROJECT_NAME} glog)
 
 install(TARGETS trajectory_sampler_node
    RUNTIME DESTINATION lib/${PROJECT_NAME}
@@ -103,6 +103,6 @@ endif()
 
 ament_export_dependencies(eigen3_cmake_module)
 ament_export_libraries(${PROJECT_NAME})
-ament_export_dependencies(${DEPENDENCIES})
 ament_export_include_directories(include)
 ament_package()
+
