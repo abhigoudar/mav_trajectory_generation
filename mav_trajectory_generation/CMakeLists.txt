@@ -18,7 +18,7 @@ find_package(Eigen3)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(glog REQUIRED libglog)
-pkg_check_modules(NLopt REQUIRED)
+# pkg_check_modules(NLopt REQUIRED)
 
 set(DEPENDENCIES
   mav_msgs
@@ -27,7 +27,7 @@ set(DEPENDENCIES
 include_directories(
   include
   ${EIGEN3_INCLUDE_DIRS}
-  ${NLOPT_INCLUDE_DIR}
+  # ${NLOPT_INCLUDE_DIR}
 )
 #############
 # LIBRARIES #
@@ -47,7 +47,7 @@ add_library(${PROJECT_NAME}
 ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
 target_link_libraries(${PROJECT_NAME} 
   yaml-cpp
-  ${NLOPT_LIBRARIES}
+  # ${NLOPT_LIBRARIES}
   glog)
 
 install(TARGETS ${PROJECT_NAME}
@@ -102,6 +102,5 @@ endif()
 ament_export_dependencies(eigen3_cmake_module)
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
-ament_export_dependencies(NLopt yaml-cpp glog)
 
 ament_package()
