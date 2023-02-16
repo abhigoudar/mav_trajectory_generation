@@ -25,7 +25,7 @@
 
 #include <Eigen/Geometry>
 
-#include <mav_msgs/default_values.h>
+#include <mav_msgs/default_values.hpp>
 
 namespace mav_trajectory_generation {
 

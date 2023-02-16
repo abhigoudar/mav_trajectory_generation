@@ -24,7 +24,7 @@ namespace mav_trajectory_generation {
 
 bool trajectoryToPolynomialTrajectoryMsg(
     const Trajectory& trajectory,
-    mav_planning_msgs::PolynomialTrajectory* msg) {
+    mav_planning_msgs::msg::PolynomialTrajectory* msg) {
   CHECK_NOTNULL(msg);
   msg->segments.clear();
 
@@ -44,7 +44,7 @@ bool trajectoryToPolynomialTrajectoryMsg(
       break;
     }
 
-    mav_planning_msgs::PolynomialSegment segment_msg;
+    mav_planning_msgs::msg::PolynomialSegment segment_msg;
     mav_planning_msgs::EigenPolynomialSegment eigen_segment;
     eigen_segment.x = segment[0].getCoefficients();
     eigen_segment.y = segment[1].getCoefficients();
@@ -71,7 +71,7 @@ bool trajectoryToPolynomialTrajectoryMsg(
 
 // Converts a ROS polynomial trajectory msg into a Trajectory.
 bool polynomialTrajectoryMsgToTrajectory(
-    const mav_planning_msgs::PolynomialTrajectory& msg,
+    const mav_planning_msgs::msg::PolynomialTrajectory& msg,
     Trajectory* trajectory) {
   mav_planning_msgs::EigenPolynomialTrajectory eigen_trajectory_msg;
   mav_planning_msgs::eigenPolynomialTrajectoryFromMsg(
@@ -109,7 +109,7 @@ bool polynomialTrajectoryMsgToTrajectory(
 
 bool trajectoryToPolynomialTrajectoryMsg(
     const Trajectory& trajectory,
-    mav_planning_msgs::PolynomialTrajectory4D* msg) {
+    mav_planning_msgs::msg::PolynomialTrajectory4D* msg) {
   CHECK_NOTNULL(msg);
   msg->segments.clear();
 
@@ -129,7 +129,7 @@ bool trajectoryToPolynomialTrajectoryMsg(
       break;
     }
 
-    mav_planning_msgs::PolynomialSegment4D segment_msg;
+    mav_planning_msgs::msg::PolynomialSegment4D segment_msg;
     mav_planning_msgs::EigenPolynomialSegment eigen_segment;
     eigen_segment.x = segment[0].getCoefficients();
     eigen_segment.y = segment[1].getCoefficients();
@@ -151,7 +151,7 @@ bool trajectoryToPolynomialTrajectoryMsg(
 
 // Converts a ROS polynomial trajectory msg into a Trajectory.
 bool polynomialTrajectoryMsgToTrajectory(
-    const mav_planning_msgs::PolynomialTrajectory4D& msg,
+    const mav_planning_msgs::msg::PolynomialTrajectory4D& msg,
     Trajectory* trajectory) {
   mav_planning_msgs::EigenPolynomialTrajectory eigen_trajectory_msg;
   mav_planning_msgs::eigenPolynomialTrajectoryFromMsg(

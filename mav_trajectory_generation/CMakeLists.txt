@@ -50,6 +50,12 @@ target_link_libraries(${PROJECT_NAME}
   ${NLOPT_LIBRARIES}
   glog)
 
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 ############
 # BINARIES #
 ############
@@ -57,11 +63,6 @@ add_executable(polynomial_timing_evaluation
   src/polynomial_timing_evaluation.cpp
 )
 target_link_libraries(polynomial_timing_evaluation ${PROJECT_NAME})
-
-install(TARGETS ${PROJECT_NAME}
-   RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
-
 install(TARGETS polynomial_timing_evaluation
    RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
@@ -102,4 +103,5 @@ ament_export_dependencies(eigen3_cmake_module)
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 ament_export_dependencies(NLopt yaml-cpp glog)
+
 ament_package()

@@ -1,28 +1,60 @@
-cmake_minimum_required(VERSION 2.8.3)
+
+
+cmake_minimum_required(VERSION 3.5)
 project(mav_trajectory_generation_ros)
 
-find_package(catkin_simple REQUIRED)
-catkin_simple(ALL_DEPS_REQUIRED)
-
-set(CMAKE_MACOSX_RPATH 0)
-add_definitions(-std=c++11)
-
-# Link against system catkin yaml-cpp if installed.
-find_package(PkgConfig)
-find_package(yaml_cpp_catkin QUIET)
-if(${yaml_cpp_catkin_FOUND})
-    message(STATUS "Found yaml_cpp_catkin, using instead of system library.")
-    set(YamlCpp_LIBRARIES ${yaml_cpp_catkin_LIBRARIES})
-    set(YamlCpp_INCLUDE_DIRS ${yaml_cpp_catkin_INCLUDE_DIRS})
-else()
-    message(STATUS "No yaml_cpp_catkin, using yaml-cpp system library instead.")
-    pkg_check_modules(YamlCpp REQUIRED yaml-cpp>=0.5)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
 endif()
 
-#############
-# LIBRARIES #
-#############
-cs_add_library(${PROJECT_NAME}
+# if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#   add_compile_options(-Wall -Wextra -Wpedantic)
+# endif()
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(mav_msgs REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(mav_planning_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(yaml-cpp REQUIRED)
+find_package(trajectory_msgs REQUIRED)
+find_package(mav_trajectory_generation REQUIRED)
+find_package(mav_visualization REQUIRED)
+
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(glog REQUIRED libglog)
+
+set(DEPENDENCIES
+  rclcpp
+  geometry_msgs
+  mav_msgs
+  mav_planning_msgs
+  sensor_msgs
+  nav_msgs
+  tf2_eigen
+  std_srvs
+  visualization_msgs
+  mav_trajectory_generation
+  mav_visualization
+  trajectory_msgs
+)
+
+include_directories(
+  include
+  ${EIGEN3_INCLUDE_DIRS}
+)
+
+add_library(${PROJECT_NAME}
   src/feasibility_analytic.cpp
   src/feasibility_base.cpp
   src/feasibility_recursive.cpp
@@ -31,30 +63,41 @@ cs_add_library(${PROJECT_NAME}
   src/ros_conversions.cpp
   src/ros_visualization.cpp
 )
+ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
 
-############
-# BINARIES #
-############
-cs_add_executable(trajectory_sampler_node
-  src/trajectory_sampler_node.cpp
-)
+add_executable(trajectory_sampler_node 
+               src/trajectory_sampler_node.cpp)
+ament_target_dependencies(trajectory_sampler_node ${DEPENDENCIES})
 target_link_libraries(trajectory_sampler_node ${PROJECT_NAME})
 
-cs_add_executable(time_evaluation_node
-  src/time_evaluation_node.cpp
+install(TARGETS trajectory_sampler_node
+   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
-target_link_libraries(time_evaluation_node ${PROJECT_NAME})
 
-#########
-# TESTS #
-#########
-catkin_add_gtest(test_feasibility
-  test/test_feasibility.cpp
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
-target_link_libraries(test_feasibility ${PROJECT_NAME} ${catkin_LIBRARIES})
 
-##########
-# EXPORT #
-##########
-cs_install()
-cs_export()
+install(
+  DIRECTORY include/
+  DESTINATION include/
+)
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  # the following line skips the linter which checks for copyrights
+  # uncomment the line when a copyright and license is not present in all source files
+  #set(ament_cmake_copyright_FOUND TRUE)
+  # the following line skips cpplint (only works in a git repo)
+  # uncomment the line when this package is not in a git repo
+  #set(ament_cmake_cpplint_FOUND TRUE)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+ament_export_dependencies(eigen3_cmake_module)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_dependencies(${DEPENDENCIES})
+ament_export_include_directories(include)
+ament_package()

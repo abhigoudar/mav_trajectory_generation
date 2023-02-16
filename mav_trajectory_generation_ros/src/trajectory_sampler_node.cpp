@@ -20,78 +20,84 @@
 
 #include <mav_trajectory_generation_ros/trajectory_sampler_node.h>
 
-TrajectorySamplerNode::TrajectorySamplerNode(const ros::NodeHandle& nh,
-                                             const ros::NodeHandle& nh_private)
-    : nh_(nh),
-      nh_private_(nh_private),
+TrajectorySamplerNode::TrajectorySamplerNode(const rclcpp::NodeOptions& options)
+    : Node("mav_trajectory_generation_ros", options),
       publish_whole_trajectory_(false),
       dt_(0.01),
-      current_sample_time_(0.0) {
-  nh_private_.param("publish_whole_trajectory", publish_whole_trajectory_,
-                    publish_whole_trajectory_);
-  nh_private_.param("dt", dt_, dt_);
+      current_sample_time_(0.0) 
+  {
+  // nh_private_.param("publish_whole_trajectory", publish_whole_trajectory_,
+  //                   publish_whole_trajectory_);
+  // nh_private_.param("dt", dt_, dt_);
 
-  command_pub_ = nh_.advertise<trajectory_msgs::MultiDOFJointTrajectory>(
-      mav_msgs::default_topics::COMMAND_TRAJECTORY, 1);
-  trajectory_sub_ = nh_.subscribe(
-      "path_segments", 10, &TrajectorySamplerNode::pathSegmentsCallback, this);
-  trajectory4D_sub_ = nh_.subscribe(
-      "path_segments_4D", 10, &TrajectorySamplerNode::pathSegments4DCallback, this);
-  stop_srv_ = nh_.advertiseService(
-      "stop_sampling", &TrajectorySamplerNode::stopSamplingCallback, this);
-  position_hold_client_ =
-      nh_.serviceClient<std_srvs::Empty>("back_to_position_hold");
+  command_pub_ = this->create_publisher<trajectory_msgs::msg::MultiDOFJointTrajectory>(
+    mav_msgs::default_topics::COMMAND_TRAJECTORY, rclcpp::SystemDefaultsQoS());
+  trajectory_sub_ = this->create_subscription<mav_planning_msgs::msg::PolynomialTrajectory>(
+      "path_segments", rclcpp::SystemDefaultsQoS(),
+      std::bind(&TrajectorySamplerNode::pathSegmentsCallback, this, std::placeholders::_1));
+  trajectory4D_sub_ = this->create_subscription<mav_planning_msgs::msg::PolynomialTrajectory4D>(
+      "path_segments", rclcpp::SystemDefaultsQoS(),
+      std::bind(&TrajectorySamplerNode::pathSegments4DCallback, this, std::placeholders::_1));
 
-  const bool oneshot = false;
-  const bool autostart = false;
-  publish_timer_ = nh_.createTimer(ros::Duration(dt_),
-                                   &TrajectorySamplerNode::commandTimerCallback,
-                                   this, oneshot, autostart);
+  stop_srv_ = this->create_service<std_srvs::srv::Empty>("stop_sampling",
+    std::bind(&TrajectorySamplerNode::stopSamplingCallback, this,
+    std::placeholders::_1, std::placeholders::_2));
+  //
+  position_hold_client_ = this->create_client<std_srvs::srv::Empty>(
+    "back_to_position_hold");
+
+  publish_timer_ = this->create_wall_timer(std::chrono::duration<float>(1.0/dt_),
+    std::bind(&TrajectorySamplerNode::commandTimerCallback, this));
 }
 
-TrajectorySamplerNode::~TrajectorySamplerNode() { publish_timer_.stop(); }
+TrajectorySamplerNode::~TrajectorySamplerNode() { 
+  publish_timer_->cancel();
+}
 
 void TrajectorySamplerNode::pathSegmentsCallback(
-    const mav_planning_msgs::PolynomialTrajectory& segments_message) {
-  if (segments_message.segments.empty()) {
-    ROS_WARN("Trajectory sampler: received empty waypoint message");
+    const mav_planning_msgs::msg::PolynomialTrajectory::SharedPtr segments_message)
+{
+  if (segments_message->segments.empty()) {
+    RCLCPP_WARN(this->get_logger(), "Trajectory sampler: received empty waypoint message");
     return;
   } else {
-    ROS_INFO("Trajectory sampler: received %lu waypoints",
-             segments_message.segments.size());
+    RCLCPP_INFO(this->get_logger(), "Trajectory sampler: received %lu waypoints",
+            segments_message->segments.size());
   }
 
-    bool success = mav_trajectory_generation::polynomialTrajectoryMsgToTrajectory(
-        segments_message, &trajectory_);
-    if (!success) {
-      return;
-    }
-    processTrajectory();
+  bool success = mav_trajectory_generation::polynomialTrajectoryMsgToTrajectory(
+      (*segments_message), &trajectory_);
+  if (!success) {
+    RCLCPP_ERROR(this->get_logger(), "Failed to generate trajectory");
+    return;
+  }
+  processTrajectory();
 }
 
 void TrajectorySamplerNode::pathSegments4DCallback(
-    const mav_planning_msgs::PolynomialTrajectory4D& segments_message) {
-  if (segments_message.segments.empty()) {
-    ROS_WARN("Trajectory sampler: received empty waypoint message");
+    const mav_planning_msgs::msg::PolynomialTrajectory4D::SharedPtr segments_message)
+{
+  if (segments_message->segments.empty()) {
+    RCLCPP_WARN(this->get_logger(), "Trajectory sampler: received empty waypoint message");
     return;
   } else {
-    ROS_INFO("Trajectory sampler: received %lu waypoints",
-             segments_message.segments.size());
+    RCLCPP_INFO(this->get_logger(), "Trajectory sampler: received %lu waypoints",
+             segments_message->segments.size());
   }
 
-    bool success = mav_trajectory_generation::polynomialTrajectoryMsgToTrajectory(
-        segments_message, &trajectory_);
-    if (!success) {
-      return;
-    }
-    processTrajectory();
+  bool success = mav_trajectory_generation::polynomialTrajectoryMsgToTrajectory(
+      (*segments_message), &trajectory_);
+  if (!success) {
+    return;
+  }
+  processTrajectory();
 }
 
 void TrajectorySamplerNode::processTrajectory() {
   // Call the service call to takeover publishing commands.
-  if (position_hold_client_.exists()) {
-    std_srvs::Empty empty_call;
-    position_hold_client_.call(empty_call);
+  if (position_hold_client_->service_is_ready()) {
+    auto empty_call = std::make_shared<std_srvs::srv::Empty::Request>();
+    position_hold_client_->async_send_request(empty_call);
   }
 
   if (publish_whole_trajectory_) {
@@ -99,45 +105,46 @@ void TrajectorySamplerNode::processTrajectory() {
     mav_msgs::EigenTrajectoryPoint::Vector trajectory_points;
     mav_trajectory_generation::sampleWholeTrajectory(trajectory_, dt_,
                                                      &trajectory_points);
-    trajectory_msgs::MultiDOFJointTrajectory msg_pub;
+    trajectory_msgs::msg::MultiDOFJointTrajectory msg_pub;
     msgMultiDofJointTrajectoryFromEigen(trajectory_points, &msg_pub);
-    command_pub_.publish(msg_pub);
+    command_pub_->publish(msg_pub);
   } else {
-    publish_timer_.start();
+    publish_timer_ = this->create_wall_timer(std::chrono::duration<float>(dt_),
+      std::bind(&TrajectorySamplerNode::commandTimerCallback, this));
     current_sample_time_ = 0.0;
-    start_time_ = ros::Time::now();
+    start_time_ = this->get_clock()->now();
   }
 }
 
-bool TrajectorySamplerNode::stopSamplingCallback(
-    std_srvs::EmptyRequest& request, std_srvs::EmptyResponse& response) {
-  publish_timer_.stop();
-  return true;
+void TrajectorySamplerNode::stopSamplingCallback(
+    const std::shared_ptr<std_srvs::srv::Empty::Request> request,
+    std::shared_ptr<std_srvs::srv::Empty::Response> response) {
+  publish_timer_->cancel();
 }
 
-void TrajectorySamplerNode::commandTimerCallback(const ros::TimerEvent&) {
+void TrajectorySamplerNode::commandTimerCallback() {
   if (current_sample_time_ <= trajectory_.getMaxTime()) {
-    trajectory_msgs::MultiDOFJointTrajectory msg;
+    trajectory_msgs::msg::MultiDOFJointTrajectory msg;
     mav_msgs::EigenTrajectoryPoint trajectory_point;
     bool success = mav_trajectory_generation::sampleTrajectoryAtTime(
         trajectory_, current_sample_time_, &trajectory_point);
     if (!success) {
-      publish_timer_.stop();
+      publish_timer_->cancel();
     }
     mav_msgs::msgMultiDofJointTrajectoryFromEigen(trajectory_point, &msg);
-    msg.points[0].time_from_start = ros::Duration(current_sample_time_);
-    command_pub_.publish(msg);
+    msg.points[0].time_from_start = rclcpp::Duration(current_sample_time_);
+    command_pub_->publish(msg);
     current_sample_time_ += dt_;
   } else {
-    publish_timer_.stop();
+    publish_timer_->cancel();
   }
 }
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "trajectory_sampler_node");
-  ros::NodeHandle nh("");
-  ros::NodeHandle nh_private("~");
-  TrajectorySamplerNode trajectory_sampler_node(nh, nh_private);
-  ROS_INFO("Initialized trajectory sampler.");
-  ros::spin();
+  rclcpp::init(argc, argv);
+  auto traj_sampler_node = std::make_shared<TrajectorySamplerNode>
+    (rclcpp::NodeOptions());
+  rclcpp::spin(traj_sampler_node);
+  rclcpp::shutdown();
+  return 0;
 }

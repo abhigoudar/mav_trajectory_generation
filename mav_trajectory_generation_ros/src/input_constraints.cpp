@@ -23,7 +23,7 @@
 #include <glog/logging.h>
 #include <yaml-cpp/yaml.h>
 
-#include <mav_msgs/default_values.h>
+#include <mav_msgs/default_values.hpp>
 
 #include "mav_trajectory_generation_ros/input_constraints.h"
 

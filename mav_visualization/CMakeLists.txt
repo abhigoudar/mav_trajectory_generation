@@ -1,36 +1,47 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(mav_visualization)
 
-find_package(catkin_simple REQUIRED)
-catkin_simple(ALL_DEPS_REQUIRED)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
-set(CMAKE_MACOSX_RPATH 0)
-add_definitions(-std=c++11)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3)
 
-#############
-# LIBRARIES #
-#############
-cs_add_library(${PROJECT_NAME}
+set(DEPENDENCIES
+  rclcpp
+  visualization_msgs
+  tf2_eigen
+)
+
+include_directories(
+  include
+  ${EIGEN3_INCLUDE_DIRS}
+)
+
+add_library(${PROJECT_NAME}
   src/marker_group.cpp
   src/leica_marker.cpp
   src/hexacopter_marker.cpp
 )
+ament_target_dependencies(${PROJECT_NAME} ${DEPENDENCIES})
 
-############
-# BINARIES #
-############
-cs_add_executable(hexacopter_publisher
-  src/hexacopter_publisher.cpp
+install(TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
-target_link_libraries(hexacopter_publisher ${PROJECT_NAME})
 
-cs_add_executable(leica_publisher
-  src/leica_publisher.cpp
+install(
+  DIRECTORY include/
+  DESTINATION include/
 )
-target_link_libraries(leica_publisher ${PROJECT_NAME})
 
-##########
-# EXPORT #
-##########
-cs_install()
-cs_export()
+ament_export_dependencies(eigen3_cmake_module)
+ament_export_libraries(${PROJECT_NAME})
+ament_export_include_directories(include)
+ament_package()

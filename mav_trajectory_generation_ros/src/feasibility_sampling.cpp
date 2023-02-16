@@ -20,8 +20,8 @@
 
 #include "mav_trajectory_generation_ros/feasibility_sampling.h"
 
-#include <mav_msgs/conversions.h>
-#include <mav_msgs/eigen_mav_msgs.h>
+#include <mav_msgs/conversions.hpp>
+#include <mav_msgs/eigen_mav_msgs.hpp>
 
 namespace mav_trajectory_generation {
 const double kNumNanosecondsPerSecond = 1.0e9;
