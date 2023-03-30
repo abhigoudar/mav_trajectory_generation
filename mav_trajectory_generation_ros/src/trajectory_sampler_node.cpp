@@ -46,8 +46,10 @@ TrajectorySamplerNode::TrajectorySamplerNode(const rclcpp::NodeOptions& options)
   position_hold_client_ = this->create_client<std_srvs::srv::Empty>(
     "back_to_position_hold");
 
+  // This is perhaps redundant
   publish_timer_ = this->create_wall_timer(std::chrono::duration<float>(1.0/dt_),
     std::bind(&TrajectorySamplerNode::commandTimerCallback, this));
+  publish_timer_->cancel();
 }
 
 TrajectorySamplerNode::~TrajectorySamplerNode() { 

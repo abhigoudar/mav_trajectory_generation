@@ -1,5 +1,3 @@
-
-
 cmake_minimum_required(VERSION 3.5)
 project(mav_trajectory_generation_ros)
 
@@ -30,6 +28,9 @@ find_package(yaml-cpp REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(glog REQUIRED libglog)
+
+find_package(eigen3_cmake_module REQUIRED)
+find_package(Eigen3)
 
 set(DEPENDENCIES
   rclcpp
