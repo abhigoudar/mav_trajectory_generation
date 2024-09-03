@@ -52,7 +52,7 @@ void setMarkerProperties(const std_msgs::msg::Header& header, double life_time,
     marker.header = header;
     marker.action = action;
     marker.id = count;
-    marker.lifetime = rclcpp::Duration(life_time);
+    marker.lifetime = rclcpp::Duration::from_seconds(life_time);
     ++count;
   }
 }

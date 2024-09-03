@@ -134,7 +134,7 @@ void TrajectorySamplerNode::commandTimerCallback() {
       publish_timer_->cancel();
     }
     mav_msgs::msgMultiDofJointTrajectoryFromEigen(trajectory_point, &msg);
-    msg.points[0].time_from_start = rclcpp::Duration(current_sample_time_);
+    msg.points[0].time_from_start = rclcpp::Duration::from_seconds(current_sample_time_);
     command_pub_->publish(msg);
     current_sample_time_ += dt_;
   } else {

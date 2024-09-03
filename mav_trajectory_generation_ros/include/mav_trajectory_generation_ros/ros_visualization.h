@@ -24,7 +24,7 @@
 #include <mav_msgs/eigen_mav_msgs.hpp>
 #include <mav_visualization/marker_group.h>
 #include <visualization_msgs/msg/marker_array.hpp>
-#include <tf2_eigen/tf2_eigen.h>
+#include <tf2_eigen/tf2_eigen.hpp>
 
 #include <mav_trajectory_generation/trajectory.h>
 #include <mav_trajectory_generation/vertex.h>

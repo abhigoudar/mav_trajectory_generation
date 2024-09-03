@@ -87,7 +87,7 @@ void MarkerGroup::setAction(const int32_t& action) {
 void MarkerGroup::setLifetime(double lifetime) {
   for (MarkerVector::iterator it = markers_.begin(); it < markers_.end();
        it++) {
-    it->lifetime = rclcpp::Duration(lifetime);
+    it->lifetime = rclcpp::Duration::from_seconds(lifetime);
   }
 }
 
